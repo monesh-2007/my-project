@@ -1,0 +1,10 @@
+medicare-ai/backend/.env
+medicare-ai/frontend/.env
+medicare-ai/backend/*.db
+medicare-ai/backend/__pycache__/
+medicare-ai/backend/**/__pycache__/
+medicare-ai/frontend/node_modules/
+medicare-ai/frontend/dist/
+*.pyc
+.venv/
+venv/
