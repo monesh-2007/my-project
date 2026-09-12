@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bot, User, Send } from 'lucide-react'
 
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
 
 function ChatBubble({ role, content }) {
   const isUser = role === 'user'

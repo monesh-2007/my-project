@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Stethoscope } from 'lucide-react'
 
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+
 const COMMON_SYMPTOMS = [
   'Fever',
   'Cough',
@@ -34,14 +36,27 @@ function SymptomChecker() {
     setIsAnalyzing(true)
     setResult(null)
 
-    // Placeholder: no dedicated symptom-analysis endpoint exists yet.
-    // This simulates a short delay before showing a stand-in result.
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    try {
+      const res = await fetch(`${API_URL}/api/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symptoms: selectedSymptoms,
+          description: description.trim(),
+        }),
+      })
 
-    setResult(
-      "Analysis isn't wired up to a backend endpoint yet — this is a placeholder result."
-    )
-    setIsAnalyzing(false)
+      if (!res.ok) throw new Error('Request failed')
+
+      const data = await res.json()
+      setResult(data.analysis || 'No analysis was returned. Please try again.')
+    } catch {
+      setResult(
+        "Couldn't reach the symptom checker right now. Please try again."
+      )
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   const canAnalyze = selectedSymptoms.length > 0 || description.trim().length > 0
@@ -101,7 +116,7 @@ function SymptomChecker() {
         </button>
 
         {result && (
-          <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+          <div className="mt-4 whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
             {result}
           </div>
         )}
