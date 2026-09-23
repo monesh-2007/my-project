@@ -179,6 +179,37 @@ function Profile() {
     setSaved(true)
   }
 
+  const handlePrint = () => {
+    const printContent = document.querySelector('.print-sheet')
+    const printWindow = window.open('', '_blank', 'width=900,height=700')
+
+    if (!printContent || !printWindow) {
+      window.print()
+      return
+    }
+
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((style) => style.outerHTML)
+      .join('')
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <title>Patient Enrollment Record</title>
+          ${styles}
+        </head>
+        <body>${printContent.outerHTML}</body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.focus()
+    setTimeout(() => {
+      printWindow.print()
+      printWindow.close()
+    }, 300)
+  }
+
   return (
     <div className="pb-8">
       <div className="print-hidden mb-6">
@@ -192,7 +223,7 @@ function Profile() {
               <p className="text-sm text-gray-500">Complete your enrollment details for safer, smoother care.</p>
             </div>
           </div>
-          <button type="button" onClick={() => window.print()} className="flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">
+          <button type="button" onClick={handlePrint} className="flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">
             <Printer size={16} />
             Print Patient Record
           </button>
