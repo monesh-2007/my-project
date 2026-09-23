@@ -6,6 +6,10 @@ import dotenv
 dotenv.load_dotenv()
 
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+GENERATION_CONFIG = {
+    "temperature": 0.2,
+    "max_output_tokens": 500,
+}
 
 SYSTEM_INSTRUCTION = (
     "You are a helpful medical assistant embedded in a personal health app called "
@@ -54,7 +58,10 @@ async def generate_medical_response(prompt: str) -> str:
     with a medical disclaimer appended.
     """
     try:
-        result = await _get_model().generate_content_async(prompt)
+        result = await _get_model().generate_content_async(
+            prompt,
+            generation_config=GENERATION_CONFIG,
+        )
         text = (result.text or "").strip()
     except Exception as exc:
         raise RuntimeError(f"Failed to generate a response from Gemini: {exc}") from exc

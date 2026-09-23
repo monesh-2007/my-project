@@ -1,6 +1,8 @@
 export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
 
 const TIMEOUT_MS = 75000
+const HEALTH_TIMEOUT_MS = 15000
+let serverWakePromise = null
 
 function joinUrl(path) {
   const suffix = path.startsWith('/') ? path : `/${path}`
@@ -8,8 +10,12 @@ function joinUrl(path) {
 }
 
 export async function apiFetch(path, options = {}) {
+  return fetchWithTimeout(path, options, TIMEOUT_MS)
+}
+
+async function fetchWithTimeout(path, options, timeoutMs) {
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
     const res = await fetch(joinUrl(path), {
@@ -36,6 +42,8 @@ export async function apiFetch(path, options = {}) {
 }
 
 export async function apiJson(path, options = {}) {
+  if (path !== '/health') await wakeServer()
+
   const res = await apiFetch(path, options)
   const data = await res.json().catch(() => ({}))
 
@@ -56,5 +64,14 @@ export async function apiJson(path, options = {}) {
 }
 
 export function wakeServer() {
-  return apiFetch('/health', { method: 'GET' }).catch(() => null)
+  if (!serverWakePromise) {
+    serverWakePromise = fetchWithTimeout('/health', { method: 'GET' }, HEALTH_TIMEOUT_MS)
+      .then((res) => (res.ok ? res : null))
+      .catch(() => null)
+      .finally(() => {
+        serverWakePromise = null
+      })
+  }
+
+  return serverWakePromise
 }
