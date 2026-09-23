@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, User, Send } from 'lucide-react'
+import { Bot, User, Send, Sparkles } from 'lucide-react'
 import ConnectingNotice from '../components/ConnectingNotice.jsx'
 import { apiJson } from '../utils/api.js'
 
@@ -37,6 +37,14 @@ function AIAssistant() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const scrollRef = useRef(null)
+  const inputRef = useRef(null)
+
+  const suggestions = [
+    'How can I improve my sleep routine?',
+    'What are simple ways to stay hydrated?',
+    'How should I prepare for my next doctor visit?',
+    'What can help me manage everyday stress?',
+  ]
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -84,6 +92,11 @@ function AIAssistant() {
     }
   }
 
+  const chooseSuggestion = (suggestion) => {
+    setInput(suggestion)
+    inputRef.current?.focus()
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="mb-4">
@@ -104,12 +117,34 @@ function AIAssistant() {
             />
           )}
 
+          {messages.length === 1 && !isLoading && (
+            <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-blue-900">
+                <Sparkles size={16} className="text-blue-600" />
+                Try asking about...
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => chooseSuggestion(suggestion)}
+                    className="rounded-full border border-blue-200 bg-white px-3 py-2 text-left text-xs font-medium text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div ref={scrollRef} />
         </div>
 
         <div className="border-t border-gray-200 p-4">
           <div className="flex items-center gap-2">
             <textarea
+              ref={inputRef}
               rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}
