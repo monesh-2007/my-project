@@ -1,8 +1,10 @@
+import time
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from database import engine
@@ -10,13 +12,12 @@ import models
 from routes import ai_assistant, patients, vitals
 from services.llm_service import generate_medical_response
 
-# The lifespan context manager replaces the deprecated @app.on_event("startup")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Code before yield executes before the application starts receiving requests
     models.Base.metadata.create_all(bind=engine)
     yield
-    # Code after yield would execute during shutdown
+
 
 app = FastAPI(
     title="MediCare AI",
@@ -44,8 +45,15 @@ class AnalyzeRequest(BaseModel):
     description: Optional[str] = ""
 
 
-class AnalyzeResponse(BaseModel):
-    analysis: str
+class ChatRequest(BaseModel):
+    message: str = ""
+
+
+def _error_payload(message: str, extra: Optional[dict] = None) -> JSONResponse:
+    body = {"status": "error", "error": message}
+    if extra:
+        body.update(extra)
+    return JSONResponse(status_code=200, content=body)
 
 
 @app.get("/")
@@ -53,28 +61,58 @@ def root():
     return {"status": "ok", "service": "MediCare AI API"}
 
 
-@app.post("/api/analyze", response_model=AnalyzeResponse)
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "timestamp": time.time()}
+
+
+@app.post("/api/analyze")
 async def analyze_symptoms(payload: AnalyzeRequest):
     """Generate a brief Gemini-backed analysis of the submitted symptoms."""
-    selected = [s.strip() for s in payload.symptoms if s and s.strip()]
-    notes = (payload.description or "").strip()
-
-    if not selected and not notes:
-        raise HTTPException(status_code=400, detail="Please provide at least one symptom.")
-
-    symptom_list = ", ".join(selected) if selected else "none selected"
-    prompt = (
-        "Provide a brief medical analysis (about 2–4 short paragraphs) of the "
-        "following symptoms. Cover possible common, non-emergency explanations "
-        "and general self-care guidance. Do not diagnose. If anything sounds "
-        "urgent, say to seek emergency care.\n\n"
-        f"Selected symptoms: {symptom_list}\n"
-        f"Additional description: {notes or 'none provided'}"
-    )
-
     try:
-        analysis = await generate_medical_response(prompt)
-    except RuntimeError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        selected = [s.strip() for s in payload.symptoms if s and s.strip()]
+        notes = (payload.description or "").strip()
 
-    return AnalyzeResponse(analysis=analysis)
+        if not selected and not notes:
+            return _error_payload(
+                "Please provide at least one symptom.",
+                {"analysis": None},
+            )
+
+        symptom_list = ", ".join(selected) if selected else "none selected"
+        prompt = (
+            "Provide a brief medical analysis (about 2–4 short paragraphs) of the "
+            "following symptoms. Cover possible common, non-emergency explanations "
+            "and general self-care guidance. Do not diagnose. If anything sounds "
+            "urgent, say to seek emergency care.\n\n"
+            f"Selected symptoms: {symptom_list}\n"
+            f"Additional description: {notes or 'none provided'}"
+        )
+
+        analysis = await generate_medical_response(prompt)
+        return {"status": "ok", "analysis": analysis, "error": None}
+    except Exception as exc:
+        return _error_payload(
+            f"Could not complete analysis: {exc}",
+            {"analysis": None},
+        )
+
+
+@app.post("/api/assistant/chat")
+async def assistant_chat(payload: ChatRequest):
+    """Chat with the Gemini-backed health assistant."""
+    try:
+        message = (payload.message or "").strip()
+        if not message:
+            return _error_payload(
+                "Please enter a message.",
+                {"response": None},
+            )
+
+        response = await generate_medical_response(message)
+        return {"status": "ok", "response": response, "error": None}
+    except Exception as exc:
+        return _error_payload(
+            f"Could not reach the assistant: {exc}",
+            {"response": None},
+        )

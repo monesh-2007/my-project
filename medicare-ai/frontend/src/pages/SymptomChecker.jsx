@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Stethoscope } from 'lucide-react'
-
-const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+import ConnectingNotice from '../components/ConnectingNotice.jsx'
+import { apiJson } from '../utils/api.js'
 
 const COMMON_SYMPTOMS = [
   'Fever',
@@ -21,6 +21,7 @@ function SymptomChecker() {
   const [description, setDescription] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [result, setResult] = useState(null)
+  const [error, setError] = useState(null)
 
   const toggleSymptom = (symptom) => {
     setSelectedSymptoms((prev) =>
@@ -35,24 +36,21 @@ function SymptomChecker() {
 
     setIsAnalyzing(true)
     setResult(null)
+    setError(null)
 
     try {
-      const res = await fetch(`${API_URL}/api/analyze`, {
+      const data = await apiJson('/api/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           symptoms: selectedSymptoms,
           description: description.trim(),
         }),
       })
-
-      if (!res.ok) throw new Error('Request failed')
-
-      const data = await res.json()
       setResult(data.analysis || 'No analysis was returned. Please try again.')
-    } catch {
-      setResult(
-        "Couldn't reach the symptom checker right now. Please try again."
+    } catch (err) {
+      setError(
+        err.message ||
+          "Couldn't reach the symptom checker right now. Please try again."
       )
     } finally {
       setIsAnalyzing(false)
@@ -112,8 +110,18 @@ function SymptomChecker() {
           className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Stethoscope size={16} />
-          {isAnalyzing ? 'Analyzing...' : 'Analyze Symptoms'}
+          {isAnalyzing
+            ? 'Connecting to server (waking up instance)...'
+            : 'Analyze Symptoms'}
         </button>
+
+        <ConnectingNotice active={isAnalyzing} />
+
+        {error && (
+          <div className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         {result && (
           <div className="mt-4 whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-sm text-gray-600">

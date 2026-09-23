@@ -1,6 +1,7 @@
 
 import { useState } from 'react'
 import { Save } from 'lucide-react'
+import { loadObject, saveObject } from '../utils/storage.js'
 
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']
 const SEX_OPTIONS = ['Female', 'Male', 'Other', 'Prefer not to say']
@@ -20,13 +21,15 @@ const inputClasses =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
 function Profile() {
-  const [formData, setFormData] = useState({
-    age: '',
-    sex: '',
-    height: '',
-    weight: '',
-    bloodType: '',
-  })
+  const [formData, setFormData] = useState(() =>
+    loadObject('medicare.profile', {
+      age: '',
+      sex: '',
+      height: '',
+      weight: '',
+      bloodType: '',
+    })
+  )
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -39,10 +42,8 @@ function Profile() {
     e.preventDefault()
     setIsSaving(true)
 
-    // Placeholder: wire this up to POST /patients/ once a logged-in user's
-    // ID is available; blood type currently has no backing field on the
-    // User model, so it isn't persisted yet.
     await new Promise((resolve) => setTimeout(resolve, 600))
+    saveObject('medicare.profile', formData)
 
     setIsSaving(false)
     setSaved(true)

@@ -5,15 +5,6 @@ import dotenv
 
 dotenv.load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not GEMINI_API_KEY:
-    raise RuntimeError(
-        "GEMINI_API_KEY is not set. Add it to backend/.env before starting the server."
-    )
-
-genai.configure(api_key=GEMINI_API_KEY)
-
 MODEL_NAME = "gemini-1.5-flash"
 
 SYSTEM_INSTRUCTION = (
@@ -34,10 +25,27 @@ DISCLAIMER = (
     "qualified healthcare provider with any questions about a medical condition.*"
 )
 
-_model = genai.GenerativeModel(
-    model_name=MODEL_NAME,
-    system_instruction=SYSTEM_INSTRUCTION,
-)
+_model = None
+
+
+def _get_model():
+    """Configure Gemini on first use so /health can stay lightweight."""
+    global _model
+    if _model is not None:
+        return _model
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "GEMINI_API_KEY is not set. Add it to the server environment."
+        )
+
+    genai.configure(api_key=api_key)
+    _model = genai.GenerativeModel(
+        model_name=MODEL_NAME,
+        system_instruction=SYSTEM_INSTRUCTION,
+    )
+    return _model
 
 
 async def generate_medical_response(prompt: str) -> str:
@@ -46,7 +54,7 @@ async def generate_medical_response(prompt: str) -> str:
     with a medical disclaimer appended.
     """
     try:
-        result = await _model.generate_content_async(prompt)
+        result = await _get_model().generate_content_async(prompt)
         text = (result.text or "").strip()
     except Exception as exc:
         raise RuntimeError(f"Failed to generate a response from Gemini: {exc}") from exc

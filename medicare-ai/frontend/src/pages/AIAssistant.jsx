@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bot, User, Send } from 'lucide-react'
-
-const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+import ConnectingNotice from '../components/ConnectingNotice.jsx'
+import { apiJson } from '../utils/api.js'
 
 function ChatBubble({ role, content }) {
   const isUser = role === 'user'
@@ -51,22 +51,25 @@ function AIAssistant() {
     setIsLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/ai-assistant/chat`, {
+      const data = await apiJson('/api/assistant/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: trimmed }),
       })
-
-      if (!res.ok) throw new Error('Request failed')
-
-      const data = await res.json()
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.response }])
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: data.response || 'No response was returned. Please try again.',
+        },
+      ])
     } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: "Sorry, I couldn't reach the assistant right now. Please try again.",
+          content:
+            err.message ||
+            "Sorry, I couldn't reach the assistant right now. Please try again.",
         },
       ])
     } finally {
@@ -95,7 +98,10 @@ function AIAssistant() {
           ))}
 
           {isLoading && (
-            <ChatBubble role="assistant" content="Thinking..." />
+            <ChatBubble
+              role="assistant"
+              content="Connecting to server (waking up instance)..."
+            />
           )}
 
           <div ref={scrollRef} />
@@ -119,6 +125,8 @@ function AIAssistant() {
               <Send size={16} />
             </button>
           </div>
+
+          <ConnectingNotice active={isLoading} />
 
           <p className="mt-2 text-center text-xs text-gray-400">
             This assistant provides general information only and is not a
