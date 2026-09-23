@@ -35,6 +35,12 @@
 		padding: 0 !important;
 	}
 
+	#root > div {
+		display: block !important;
+		height: auto !important;
+		min-height: 0 !important;
+	}
+
 	.print-only {
 		display: block !important;
 	}

@@ -180,34 +180,7 @@ function Profile() {
   }
 
   const handlePrint = () => {
-    const printContent = document.querySelector('.print-sheet')
-    const printWindow = window.open('', '_blank', 'width=900,height=700')
-
-    if (!printContent || !printWindow) {
-      window.print()
-      return
-    }
-
-    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-      .map((style) => style.outerHTML)
-      .join('')
-
-    printWindow.document.write(`
-      <!doctype html>
-      <html>
-        <head>
-          <title>Patient Enrollment Record</title>
-          ${styles}
-        </head>
-        <body>${printContent.outerHTML}</body>
-      </html>
-    `)
-    printWindow.document.close()
-    printWindow.focus()
-    setTimeout(() => {
-      printWindow.print()
-      printWindow.close()
-    }, 300)
+    window.print()
   }
 
   return (
