@@ -5,7 +5,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 
 SYSTEM_INSTRUCTION = (
     "You are a helpful medical assistant embedded in a personal health app called "
