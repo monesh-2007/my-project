@@ -202,6 +202,16 @@ function Profile() {
     const field = (label, value) => `<div class="field"><span>${escapePrintValue(label)}</span><strong>${escapePrintValue(value)}</strong></div>`
     const section = (title, content) => `<section><h2>${escapePrintValue(title)}</h2><div class="grid">${content}</div></section>`
 
+    let hasPrinted = false
+    const printDocument = () => {
+      if (hasPrinted) return
+      hasPrinted = true
+      printWindow.focus()
+      printWindow.print()
+      printWindow.close()
+    }
+    printWindow.onload = printDocument
+    printWindow.document.open()
     printWindow.document.write(`
       <!doctype html>
       <html>
@@ -240,11 +250,7 @@ function Profile() {
       </html>
     `)
     printWindow.document.close()
-    printWindow.onload = () => {
-      printWindow.focus()
-      printWindow.print()
-      printWindow.close()
-    }
+    setTimeout(printDocument, 1000)
   }
 
   return (
