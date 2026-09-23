@@ -1,10 +1,35 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, User, Send, Sparkles } from 'lucide-react'
+import { AlertTriangle, Bot, User, Send, Sparkles } from 'lucide-react'
 import ConnectingNotice from '../components/ConnectingNotice.jsx'
 import { apiJson } from '../utils/api.js'
 
-function ChatBubble({ role, content }) {
+function ChatBubble({ role, content, suggestions, onSuggestion }) {
   const isUser = role === 'user'
+  const isQuotaNotice = !isUser && content.startsWith('The AI service has reached')
+
+  if (isQuotaNotice) {
+    const guidance = content.split('\n\nDisclaimer:')[0]
+    return (
+      <div className="flex items-start gap-2">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+          <AlertTriangle size={16} />
+        </div>
+        <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <p className="font-semibold">AI limit reached for today</p>
+          <p className="mt-1 leading-relaxed">{guidance.replace('The AI service has reached its daily limit. ', '')}</p>
+          <p className="mt-3 text-xs leading-relaxed text-amber-800">You can still use the tracker and symptom tools while the daily limit resets.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {suggestions.slice(0, 2).map((suggestion) => (
+              <button key={suggestion} type="button" onClick={() => onSuggestion(suggestion)} className="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100">
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={`flex items-start gap-2 ${isUser ? 'flex-row-reverse' : ''}`}>
       <div
@@ -107,7 +132,13 @@ function AIAssistant() {
       <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div className="flex-1 space-y-4 overflow-y-auto p-5">
           {messages.map((msg, idx) => (
-            <ChatBubble key={idx} role={msg.role} content={msg.content} />
+            <ChatBubble
+              key={idx}
+              role={msg.role}
+              content={msg.content}
+              suggestions={suggestions}
+              onSuggestion={chooseSuggestion}
+            />
           ))}
 
           {isLoading && (

@@ -23,10 +23,9 @@ SYSTEM_INSTRUCTION = (
 )
 
 DISCLAIMER = (
-    "\n\n---\n"
-    "*This response is for informational purposes only and is not a substitute "
+    "\n\nDisclaimer: This response is for informational purposes only and is not a substitute "
     "for professional medical advice, diagnosis, or treatment. Always consult a "
-    "qualified healthcare provider with any questions about a medical condition.*"
+    "qualified healthcare provider with any questions about a medical condition."
 )
 
 _model = None
