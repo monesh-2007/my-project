@@ -52,6 +52,32 @@ def _get_model():
     return _model
 
 
+def _is_quota_error(error: Exception) -> bool:
+    message = str(error).lower()
+    return "429" in message or "quota" in message or "rate limit" in message
+
+
+def _fallback_response(prompt: str) -> str:
+    """Keep the app useful when the provider's free daily quota is exhausted."""
+    if "selected symptoms:" in prompt.lower():
+        return (
+            "The AI service has reached its daily limit, so here is a general "
+            "self-care check-in instead. Rest, drink water, eat something light "
+            "if you have not eaten, and monitor whether your symptoms improve. "
+            "Avoid self-diagnosing from this result. Seek urgent medical care for "
+            "trouble breathing, chest pain, fainting, confusion, sudden severe "
+            "pain, or rapidly worsening symptoms."
+            + DISCLAIMER
+        )
+
+    return (
+        "The AI service has reached its daily limit. For now, rest, stay hydrated, "
+        "and contact a qualified healthcare professional for personalized advice. "
+        "Seek emergency care for severe or rapidly worsening symptoms."
+        + DISCLAIMER
+    )
+
+
 async def generate_medical_response(prompt: str) -> str:
     """
     Send a user prompt to Gemini and return the assistant's text response,
@@ -64,6 +90,8 @@ async def generate_medical_response(prompt: str) -> str:
         )
         text = (result.text or "").strip()
     except Exception as exc:
+        if _is_quota_error(exc):
+            return _fallback_response(prompt)
         raise RuntimeError(f"Failed to generate a response from Gemini: {exc}") from exc
 
     if not text:

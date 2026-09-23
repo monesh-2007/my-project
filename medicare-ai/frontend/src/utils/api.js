@@ -48,7 +48,13 @@ export async function apiJson(path, options = {}) {
   const data = await res.json().catch(() => ({}))
 
   if (data?.error) {
-    throw new Error(data.error)
+    const errorText = String(data.error)
+    if (errorText.includes('429') || /quota|rate limit/i.test(errorText)) {
+      throw new Error(
+        'The AI service has reached its daily limit. Please try again tomorrow or ask a healthcare professional for urgent concerns.'
+      )
+    }
+    throw new Error(errorText)
   }
 
   if (!res.ok) {
