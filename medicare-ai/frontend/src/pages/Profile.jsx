@@ -3,6 +3,7 @@ import {
   CreditCard,
   FileCheck,
   MapPin,
+  Printer,
   ShieldCheck,
   UserRound,
   Users,
@@ -73,6 +74,88 @@ function Section({ icon: Icon, title, description, children }) {
   )
 }
 
+function PrintField({ label, value }) {
+  return (
+    <div className="print-field">
+      <dt>{label}</dt>
+      <dd>{value || 'Not provided'}</dd>
+    </div>
+  )
+}
+
+function PrintableProfile({ profile }) {
+  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ')
+  const address = [profile.address, profile.city, profile.state, profile.postalCode]
+    .filter(Boolean)
+    .join(', ')
+
+  return (
+    <div className="print-only print-sheet">
+      <header className="print-header">
+        <div>
+          <p className="print-kicker">MediCare AI</p>
+          <h1>Patient Enrollment Record</h1>
+          <p>Confidential patient information - print date: {new Date().toLocaleDateString()}</p>
+        </div>
+        <div className="print-status">{profile.consentPrivacy && profile.consentTreatment ? 'Enrollment confirmed' : 'Enrollment incomplete'}</div>
+      </header>
+
+      <section className="print-section">
+        <h2>Patient Identification</h2>
+        <dl className="print-grid">
+          <PrintField label="Legal name" value={fullName} />
+          <PrintField label="Preferred name" value={profile.preferredName} />
+          <PrintField label="Date of birth" value={profile.dateOfBirth} />
+          <PrintField label="Sex" value={profile.sex} />
+          <PrintField label="Blood type" value={profile.bloodType} />
+          <PrintField label="Height / weight" value={[profile.height && `${profile.height} cm`, profile.weight && `${profile.weight} kg`].filter(Boolean).join(' / ')} />
+        </dl>
+      </section>
+
+      <section className="print-section">
+        <h2>Contact Information</h2>
+        <dl className="print-grid">
+          <PrintField label="Email" value={profile.email} />
+          <PrintField label="Mobile phone" value={profile.phone} />
+          <PrintField label="Address" value={address} />
+        </dl>
+      </section>
+
+      <section className="print-section">
+        <h2>Insurance and Financial Details</h2>
+        <dl className="print-grid">
+          <PrintField label="Insurance status" value={profile.insuranceStatus} />
+          <PrintField label="Provider" value={profile.insuranceProvider} />
+          <PrintField label="Member / policy ID" value={profile.memberId} />
+          <PrintField label="Group number" value={profile.groupNumber} />
+          <PrintField label="Policy holder" value={profile.policyHolderName} />
+        </dl>
+      </section>
+
+      <section className="print-section">
+        <h2>Emergency Contact</h2>
+        <dl className="print-grid">
+          <PrintField label="Name" value={profile.emergencyName} />
+          <PrintField label="Relationship" value={profile.emergencyRelationship} />
+          <PrintField label="Phone" value={profile.emergencyPhone} />
+          <PrintField label="Email" value={profile.emergencyEmail} />
+        </dl>
+      </section>
+
+      <section className="print-section">
+        <h2>Legal and Consent</h2>
+        <dl className="print-grid">
+          <PrintField label="Legal signature" value={profile.legalName} />
+          <PrintField label="Care coordination consent" value={profile.consentTreatment ? 'Confirmed' : 'Not confirmed'} />
+          <PrintField label="Privacy acknowledgement" value={profile.consentPrivacy ? 'Confirmed' : 'Not confirmed'} />
+        </dl>
+      </section>
+
+      <footer className="print-footer">This document contains confidential health information. Handle and store it securely.</footer>
+    </div>
+  )
+}
+
 function Profile() {
   const [formData, setFormData] = useState(() => ({
     ...DEFAULT_PROFILE,
@@ -98,20 +181,26 @@ function Profile() {
 
   return (
     <div className="pb-8">
-      <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-            <UserRound size={23} />
+      <div className="print-hidden mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+              <UserRound size={23} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-800">Patient Profile</h1>
+              <p className="text-sm text-gray-500">Complete your enrollment details for safer, smoother care.</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-800">Patient Profile</h1>
-            <p className="text-sm text-gray-500">Complete your enrollment details for safer, smoother care.</p>
-          </div>
+          <button type="button" onClick={() => window.print()} className="flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">
+            <Printer size={16} />
+            Print Patient Record
+          </button>
         </div>
         <p className="mt-4 text-xs text-gray-500"><span className="text-red-500">*</span> Required for enrollment. Optional details can be added later.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-4xl space-y-7 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+      <form onSubmit={handleSubmit} className="print-hidden max-w-4xl space-y-7 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
         <Section icon={UserRound} title="Patient Identification" description="Use your legal details to prevent duplicate or mixed records.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Legal first name" required><input required value={formData.firstName} onChange={handleChange('firstName')} className={inputClasses} autoComplete="given-name" /></Field>
@@ -171,6 +260,8 @@ function Profile() {
           {saved && <span className="text-sm text-green-600">Profile saved successfully.</span>}
         </div>
       </form>
+
+      <PrintableProfile profile={formData} />
     </div>
   )
 }

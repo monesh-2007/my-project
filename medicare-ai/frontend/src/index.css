@@ -1,3 +1,137 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.print-only {
+	display: none;
+}
+
+@media print {
+	@page {
+		size: A4;
+		margin: 14mm;
+	}
+
+	html,
+	body,
+	#root {
+		min-height: 100%;
+		background: #fff !important;
+	}
+
+	body {
+		color: #172033;
+		print-color-adjust: exact;
+		-webkit-print-color-adjust: exact;
+	}
+
+	aside,
+	.print-hidden {
+		display: none !important;
+	}
+
+	main {
+		overflow: visible !important;
+		padding: 0 !important;
+	}
+
+	.print-only {
+		display: block !important;
+	}
+
+	.print-sheet {
+		width: 100%;
+		font-family: Georgia, 'Times New Roman', serif;
+	}
+
+	.print-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 24px;
+		border-bottom: 2px solid #2563eb;
+		padding-bottom: 14px;
+	}
+
+	.print-kicker {
+		margin: 0 0 4px;
+		color: #2563eb;
+		font-family: Arial, sans-serif;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 1.5px;
+		text-transform: uppercase;
+	}
+
+	.print-header h1 {
+		margin: 0;
+		font-size: 24px;
+		line-height: 1.2;
+	}
+
+	.print-header p:last-child {
+		margin: 5px 0 0;
+		color: #64748b;
+		font-family: Arial, sans-serif;
+		font-size: 10px;
+	}
+
+	.print-status {
+		border: 1px solid #bfdbfe;
+		border-radius: 999px;
+		color: #1d4ed8;
+		font-family: Arial, sans-serif;
+		font-size: 10px;
+		font-weight: 700;
+		padding: 6px 10px;
+		white-space: nowrap;
+	}
+
+	.print-section {
+		break-inside: avoid;
+		border-bottom: 1px solid #dbe3ee;
+		padding: 16px 0 14px;
+		page-break-inside: avoid;
+	}
+
+	.print-section h2 {
+		margin: 0 0 10px;
+		color: #1d4ed8;
+		font-family: Arial, sans-serif;
+		font-size: 12px;
+		letter-spacing: 0.4px;
+		text-transform: uppercase;
+	}
+
+	.print-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 9px 28px;
+		margin: 0;
+	}
+
+	.print-field {
+		min-width: 0;
+	}
+
+	.print-field dt {
+		color: #64748b;
+		font-family: Arial, sans-serif;
+		font-size: 9px;
+		font-weight: 700;
+		text-transform: uppercase;
+	}
+
+	.print-field dd {
+		margin: 2px 0 0;
+		overflow-wrap: anywhere;
+		font-size: 11px;
+	}
+
+	.print-footer {
+		padding-top: 16px;
+		color: #64748b;
+		font-family: Arial, sans-serif;
+		font-size: 9px;
+	}
+}
