@@ -156,6 +156,15 @@ function PrintableProfile({ profile }) {
   )
 }
 
+function escapePrintValue(value) {
+  return String(value || 'Not provided')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 function Profile() {
   const [formData, setFormData] = useState(() => ({
     ...DEFAULT_PROFILE,
@@ -180,7 +189,62 @@ function Profile() {
   }
 
   const handlePrint = () => {
-    window.print()
+    const printWindow = window.open('', '_blank', 'width=900,height=700')
+    if (!printWindow) {
+      window.print()
+      return
+    }
+
+    const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(' ')
+    const address = [formData.address, formData.city, formData.state, formData.postalCode]
+      .filter(Boolean)
+      .join(', ')
+    const field = (label, value) => `<div class="field"><span>${escapePrintValue(label)}</span><strong>${escapePrintValue(value)}</strong></div>`
+    const section = (title, content) => `<section><h2>${escapePrintValue(title)}</h2><div class="grid">${content}</div></section>`
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <title>Patient Enrollment Record</title>
+          <style>
+            @page { size: A4; margin: 14mm; }
+            * { box-sizing: border-box; }
+            body { margin: 0; color: #172033; font-family: Arial, sans-serif; font-size: 11px; }
+            header { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid #2563eb; padding-bottom: 14px; }
+            .brand { color: #2563eb; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+            h1 { margin: 4px 0; font-family: Georgia, serif; font-size: 24px; line-height: 1.2; }
+            header p { margin: 0; color: #64748b; font-size: 10px; }
+            .status { height: max-content; border: 1px solid #bfdbfe; border-radius: 20px; color: #1d4ed8; font-size: 10px; font-weight: 700; padding: 6px 10px; white-space: nowrap; }
+            section { break-inside: avoid; border-bottom: 1px solid #dbe3ee; padding: 16px 0 14px; page-break-inside: avoid; }
+            h2 { margin: 0 0 10px; color: #1d4ed8; font-size: 12px; letter-spacing: .4px; text-transform: uppercase; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 28px; }
+            .field span { display: block; color: #64748b; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+            .field strong { display: block; margin-top: 2px; font-weight: 400; overflow-wrap: anywhere; }
+            footer { padding-top: 16px; color: #64748b; font-size: 9px; }
+          </style>
+        </head>
+        <body>
+          <header>
+            <div><div class="brand">MediCare AI</div><h1>Patient Enrollment Record</h1><p>Confidential patient information - print date: ${escapePrintValue(new Date().toLocaleDateString())}</p></div>
+            <div class="status">${formData.consentPrivacy && formData.consentTreatment ? 'Enrollment confirmed' : 'Enrollment incomplete'}</div>
+          </header>
+          ${section('Patient Identification', field('Legal name', fullName) + field('Preferred name', formData.preferredName) + field('Date of birth', formData.dateOfBirth) + field('Sex', formData.sex) + field('Blood type', formData.bloodType) + field('Height / weight', [formData.height && `${formData.height} cm`, formData.weight && `${formData.weight} kg`].filter(Boolean).join(' / ')))}
+          ${section('Contact Information', field('Email', formData.email) + field('Mobile phone', formData.phone) + field('Address', address))}
+          ${section('Insurance and Financial Details', field('Insurance status', formData.insuranceStatus) + field('Provider', formData.insuranceProvider) + field('Member / policy ID', formData.memberId) + field('Group number', formData.groupNumber) + field('Policy holder', formData.policyHolderName))}
+          ${section('Emergency Contact', field('Name', formData.emergencyName) + field('Relationship', formData.emergencyRelationship) + field('Phone', formData.emergencyPhone) + field('Email', formData.emergencyEmail))}
+          ${section('Legal and Consent', field('Legal signature', formData.legalName) + field('Care coordination consent', formData.consentTreatment ? 'Confirmed' : 'Not confirmed') + field('Privacy acknowledgement', formData.consentPrivacy ? 'Confirmed' : 'Not confirmed'))}
+          <footer>This document contains confidential health information. Handle and store it securely.</footer>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.onload = () => {
+      printWindow.focus()
+      printWindow.print()
+      printWindow.close()
+    }
   }
 
   return (
