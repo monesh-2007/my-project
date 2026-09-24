@@ -2,6 +2,11 @@ import time
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
+from dotenv import load_dotenv # Add this line
+import os                      # Add this line
+
+load_dotenv()                  # Add this line BEFORE FastAPI starts
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
