@@ -2,6 +2,20 @@ import { useState, useRef, useEffect } from 'react'
 import { AlertTriangle, Bot, User, Send, Sparkles } from 'lucide-react'
 import ConnectingNotice from '../components/ConnectingNotice.jsx'
 import { apiJson } from '../utils/api.js'
+import { loadList, saveList } from '../utils/storage.js'
+
+const MESSAGE_HISTORY_KEY = 'medicare-ai-assistant-messages'
+
+const SUGGESTION_ANSWERS = {
+  'How can I improve my sleep routine?': 'Keep a consistent sleep and wake time, dim screens before bed, avoid caffeine late in the day, and make your bedroom cool, quiet, and comfortable. If sleep problems continue, discuss them with a healthcare professional.',
+  'What are simple ways to stay hydrated?': 'Keep water nearby, drink regularly throughout the day, and add water-rich foods such as fruit, soup, or vegetables. Your fluid needs can vary with activity, weather, and health conditions.',
+  'How should I prepare for my next doctor visit?': 'Write down your main concerns, current medicines, allergies, recent symptoms, and questions. Bring relevant readings such as blood pressure or glucose, and note when symptoms started or changed.',
+  'What can help me manage everyday stress?': 'Try a short walk, slow breathing, a regular sleep routine, time away from screens, and talking with someone you trust. If stress feels overwhelming or affects daily life, seek professional support.',
+  'What are healthy habits for better energy?': 'Aim for regular meals, enough water, consistent sleep, and gentle movement. Increase activity gradually and ask for medical advice if tiredness is new, severe, or persistent.',
+  'How can I remember my medicines?': 'Take medicines at the same time each day, use a pill organizer or phone reminder, and keep an updated medicine list. Never change a dose or stop a medicine without medical advice.',
+  'What should I track about my symptoms?': 'Record the symptom, when it started, its intensity, possible triggers, what helps, and any related changes. A simple dated note can make your next healthcare conversation more useful.',
+  'When should I contact a doctor?': 'Contact a healthcare professional for symptoms that are worsening, persistent, unusual for you, or affecting daily activities. Seek urgent help for severe breathing trouble, chest pain, confusion, or sudden weakness.',
+}
 
 function ChatBubble({ role, content, suggestions, onSuggestion }) {
   const isUser = role === 'user'
@@ -52,24 +66,40 @@ function ChatBubble({ role, content, suggestions, onSuggestion }) {
   )
 }
 
+function LoadingBubble() {
+  return (
+    <div className="flex items-start gap-2">
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-700">
+        <Bot size={16} />
+      </div>
+      <div className="flex items-center gap-1 rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-3">
+        <span className="h-2 w-2 animate-bounce rounded-full bg-blue-500 [animation-delay:-0.3s]" />
+        <span className="h-2 w-2 animate-bounce rounded-full bg-blue-500 [animation-delay:-0.15s]" />
+        <span className="h-2 w-2 animate-bounce rounded-full bg-blue-500" />
+        <span className="ml-2 text-xs text-gray-500">Preparing your answer</span>
+      </div>
+    </div>
+  )
+}
+
 function AIAssistant() {
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: "Hi! I'm your MediCare AI assistant. How can I help you today?",
-    },
-  ])
+  const [messages, setMessages] = useState(() => loadList(MESSAGE_HISTORY_KEY, [{
+    role: 'assistant',
+    content: "Hi! I'm your MediCare AI assistant. Choose a suggestion for a quick saved answer, or type your own question.",
+  }]))
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
+  const suggestionTimerRef = useRef(null)
 
-  const suggestions = [
-    'How can I improve my sleep routine?',
-    'What are simple ways to stay hydrated?',
-    'How should I prepare for my next doctor visit?',
-    'What can help me manage everyday stress?',
-  ]
+  const suggestions = Object.keys(SUGGESTION_ANSWERS)
+
+  useEffect(() => {
+    saveList(MESSAGE_HISTORY_KEY, messages.slice(-30))
+  }, [messages])
+
+  useEffect(() => () => clearTimeout(suggestionTimerRef.current), [])
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -118,8 +148,13 @@ function AIAssistant() {
   }
 
   const chooseSuggestion = (suggestion) => {
-    setInput(suggestion)
-    inputRef.current?.focus()
+    if (isLoading) return
+    setIsLoading(true)
+    setMessages((prev) => [...prev, { role: 'user', content: suggestion }])
+    suggestionTimerRef.current = setTimeout(() => {
+      setMessages((prev) => [...prev, { role: 'assistant', content: SUGGESTION_ANSWERS[suggestion] }])
+      setIsLoading(false)
+    }, 5000)
   }
 
   return (
@@ -142,10 +177,28 @@ function AIAssistant() {
           ))}
 
           {isLoading && (
-            <ChatBubble
-              role="assistant"
-              content="Connecting to server (waking up instance)..."
-            />
+            <LoadingBubble />
+          )}
+
+          {messages.length > 1 && !isLoading && (
+            <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-blue-900">
+                <Sparkles size={16} className="text-blue-600" />
+                Continue with a saved answer
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={`follow-up-${suggestion}`}
+                    type="button"
+                    onClick={() => chooseSuggestion(suggestion)}
+                    className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-left text-xs font-medium text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
           {messages.length === 1 && !isLoading && (
@@ -154,7 +207,7 @@ function AIAssistant() {
                 <Sparkles size={16} className="text-blue-600" />
                 Try asking about...
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {suggestions.map((suggestion) => (
                   <button
                     key={suggestion}

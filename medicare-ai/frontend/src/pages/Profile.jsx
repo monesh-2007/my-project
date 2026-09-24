@@ -335,6 +335,12 @@ function Profile() {
         </div>
       </form>
 
+      <div className="print-hidden mx-auto mt-10 max-w-4xl border-t border-gray-200 pt-6 text-center">
+        <p className="text-xs font-semibold text-gray-400">Developed by:</p>
+        <p className="mt-1 text-2xl font-extrabold tracking-tight text-gray-900">Monesh The Unleashed</p>
+        <p className="mt-2 font-mono text-xs font-medium uppercase tracking-[0.28em] text-gray-500">Software Developer</p>
+      </div>
+
       <PrintableProfile profile={formData} />
     </div>
   )
