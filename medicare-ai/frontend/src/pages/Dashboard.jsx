@@ -28,13 +28,15 @@ function Dashboard() {
   return (
     <div>
       <div className="mb-6">
-        <section className="mb-6 overflow-hidden rounded-2xl bg-slate-950 px-6 py-8 text-white sm:px-8 sm:py-10">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">MediCare AI</p>
-          <h1 className="max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">Your health, clearer.</h1>
-          <p className="mt-3 max-w-lg text-sm leading-6 text-slate-300 sm:text-base">
+        <section className="hero-panel relative mb-6 overflow-hidden rounded-2xl border border-white/80 bg-white/75 px-6 py-8 text-slate-950 shadow-[0_24px_70px_rgba(94,111,160,0.16)] backdrop-blur-xl sm:px-8 sm:py-10">
+          <div className="hero-orb hero-orb-cyan" aria-hidden="true" />
+          <div className="hero-orb hero-orb-violet" aria-hidden="true" />
+          <p className="relative mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-blue-600">MediCare AI / Personal health intelligence</p>
+          <h1 className="relative max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">Your health, clearer.</h1>
+          <p className="relative mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-base">
             Understand your health, keep your care organized, and make your next step feel more manageable.
           </p>
-          <Link to="/ai-assistant" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200">
+          <Link to="/ai-assistant" className="relative mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_14px_30px_rgba(37,99,235,0.3)]">
             Get Started <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </section>
