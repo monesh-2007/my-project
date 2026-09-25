@@ -16,6 +16,13 @@
     <meta property="og:image" content="/og-image.png" />
     <meta property="og:type" content="website" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>
+      const savedTheme = localStorage.getItem('medicare.theme')
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark')
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
