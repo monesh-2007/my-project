@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Activity, Pill, Calendar } from 'lucide-react'
+import { Activity, Pill, Calendar, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Card from '../components/Card.jsx'
 import { loadList, loadObject } from '../utils/storage.js'
@@ -28,7 +28,18 @@ function Dashboard() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Dashboard</h1>
+        <section className="mb-6 overflow-hidden rounded-2xl bg-slate-950 px-6 py-8 text-white sm:px-8 sm:py-10">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">MediCare AI</p>
+          <h1 className="max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">Your health, clearer.</h1>
+          <p className="mt-3 max-w-lg text-sm leading-6 text-slate-300 sm:text-base">
+            Understand your health, keep your care organized, and make your next step feel more manageable.
+          </p>
+          <Link to="/ai-assistant" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200">
+            Get Started <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </section>
+
+        <h2 className="text-2xl font-semibold text-gray-800">Dashboard</h2>
         <p className="text-sm text-gray-500">
           {profile.age
             ? `Welcome back. Profile on file: age ${profile.age}.`
